@@ -1,0 +1,56 @@
+{
+  "name": "playerMetrics",
+  "namespace": "com.mas2022datascience.avro.v1",
+  "type": "record",
+  "description" : "A player Event",
+  "fields": [
+    {   "name" : "createdAt",
+      "type" : {
+        "type" : "long",
+        "logicalType" : "timestamp-millis"
+      }
+    },
+    {
+      "name": "x",
+      "type": "int"
+    },
+    {
+      "name": "y",
+      "type": "int"
+    },
+    {
+      "name": "velocity",
+      "type": "long"
+    },
+    {
+      "name": "velocityVector",
+      "type": {
+        "type": "array",
+        "items": "long"
+      }
+    },
+    {
+      "name": "acceleration",
+      "type": "float"
+    },
+    {
+      "name": "accelerationVector",
+      "type": {
+        "type": "array",
+        "items": "long"
+      }
+    },
+    {
+      "name": "pressingIndex",
+      "type": "float"
+    },
+    {
+      "name": "controlIndex",
+      "type": "float"
+    },
+    {
+      "name": "zone",
+      "type":  "int"
+    }
+  ]
+}
