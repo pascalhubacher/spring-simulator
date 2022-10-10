@@ -10,11 +10,11 @@ import org.springframework.kafka.core.KafkaAdmin;
 @Configuration
 public class KafkaAdminConfig {
 
-    private @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers;
+    //private @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers;
 
     @Bean
     public KafkaAdmin admin() {
-        return new KafkaAdmin((Map.of(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)));
+        return new KafkaAdmin((Map.of(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "${spring.kafka.bootstrap-servers}")));
     }
 
 }

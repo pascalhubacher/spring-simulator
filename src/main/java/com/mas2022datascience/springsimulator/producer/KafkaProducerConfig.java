@@ -21,18 +21,18 @@ import org.springframework.kafka.core.ProducerFactory;
 @Configuration
 public class KafkaProducerConfig {
 
-  private @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers;
-  private @Value("${spring.kafka.properties.schema.registry.url}") String schemaRegistryURL;
+  //private @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers;
+  //private @Value("${spring.kafka.properties.schema.registry.url}") String schemaRegistryURL;
 
   @Bean
   public ProducerFactory<String, playerMetrics> producerFactory() {
     return new DefaultKafkaProducerFactory<>(
-        Map.of(BOOTSTRAP_SERVERS_CONFIG, bootstrapServers,
+        Map.of(BOOTSTRAP_SERVERS_CONFIG, "${spring.kafka.bootstrap-servers}",
         RETRIES_CONFIG, "${spring.kafka.producer.retries}",
         BUFFER_MEMORY_CONFIG, "${spring.kafka.producer.buffer-memory}",
         KEY_SERIALIZER_CLASS_CONFIG, "${spring.kafka.producer.key-serializer}.class",
         VALUE_SERIALIZER_CLASS_CONFIG, "${spring.kafka.producer.value-serializer}.class",
-        SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryURL
+        SCHEMA_REGISTRY_URL_CONFIG, "${spring.kafka.properties.schema.registry.url}"
         ));
   }
 

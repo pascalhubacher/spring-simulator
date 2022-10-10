@@ -140,7 +140,7 @@
 						<param>http://${env.DATAPLATFORM_IP}:8081</param>
 					</schemaRegistryUrls>
 					<subjects>
-						<test-java-avro-topic-value>src/main/avro/Notification-v1.avsc</test-java-avro-topic-value>
+						<test-java-avro-topic-value>src/main/avro/playerMetrics.avsc</test-java-avro-topic-value>
 					</subjects>
 				</configuration>
 				<goals>
