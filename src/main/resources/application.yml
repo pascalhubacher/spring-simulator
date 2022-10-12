@@ -17,4 +17,4 @@ spring:
         auto.register.schemas: false
         use.latest.version: true
     properties:
-      schema.registry.url: http://${DATAPLATFORM_IP}:8081
+      schema.registry.url: "http://${DATAPLATFORM_IP}:8081"

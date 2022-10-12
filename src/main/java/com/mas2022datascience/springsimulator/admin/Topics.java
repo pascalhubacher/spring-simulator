@@ -9,17 +9,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class Topics {
 
-  private @Value("${topic.name}") String topicName;
-  private @Value("${topic.replication-factor}") Integer topicReplicationFactor;
-  private @Value("${topic.partitions}") Integer topicPartitions;
+  @Value(value = "${topic.name}")
+  private String mainTopic;
+
+  @Value(value = "${topic.partitions}")
+  private Integer testTopicPartitions;
+
+  @Value(value = "${topic.replication-factor}")
+  private short testTopicReplicationFactor;
 
   // creates or alters the topic
   @Bean
-  NewTopic main() {
-    return TopicBuilder.name(topicName)
-        .partitions(topicPartitions)
-        .replicas(topicReplicationFactor)
+  public NewTopic main() {
+    return TopicBuilder.name(mainTopic)
+        .partitions(testTopicPartitions)
+        .replicas(testTopicReplicationFactor)
         .build();
   }
-
 }

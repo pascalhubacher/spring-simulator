@@ -20,33 +20,33 @@
     },
     {
       "name": "velocity",
-      "type": "long"
+      "type": "double"
     },
     {
       "name": "velocityVector",
       "type": {
         "type": "array",
-        "items": "long"
+        "items": "double"
       }
     },
     {
       "name": "acceleration",
-      "type": "float"
+      "type": "double"
     },
     {
       "name": "accelerationVector",
       "type": {
         "type": "array",
-        "items": "long"
+        "items": "double"
       }
     },
     {
       "name": "pressingIndex",
-      "type": "float"
+      "type": "double"
     },
     {
       "name": "controlIndex",
-      "type": "float"
+      "type": "double"
     },
     {
       "name": "zone",
