@@ -131,7 +131,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							if (!objId.equals("0")){
 								//player
 								playerMetrics playerMetric = playerMetrics.newBuilder()
-										.setCreatedAt(Instant.ofEpochSecond(utc))
+										.setCreatedAt(Instant.ofEpochMilli(utc))
 										.setX(Integer.parseInt(objX))
 										.setY(Integer.parseInt(objY))
 										.setVelocity(0)
