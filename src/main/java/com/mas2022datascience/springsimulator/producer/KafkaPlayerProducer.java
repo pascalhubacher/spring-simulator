@@ -11,12 +11,12 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 
 @Component
-public class KafkaProducer {
+public class KafkaPlayerProducer {
   @Autowired
   private KafkaTemplate<String, playerMetrics> kafkaTemplate;
 
-  @Value(value = "${topic.name}")
-  private String mainTopic;
+  @Value(value = "${topic.player.name}")
+  private String playerTopic;
 
   public void produce(String key, playerMetrics value) {
 
@@ -24,7 +24,7 @@ public class KafkaProducer {
 
     SendResult<String, playerMetrics> result = null;
     try {
-      result = kafkaTemplate.send(mainTopic, key, value).get(10, TimeUnit.SECONDS);
+      result = kafkaTemplate.send(playerTopic, key, value).get(10, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       e.printStackTrace();
     } catch (ExecutionException e) {

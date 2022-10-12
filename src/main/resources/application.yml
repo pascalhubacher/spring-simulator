@@ -1,7 +1,12 @@
 topic:
-  name: main
-  replication-factor: 3
-  partitions: 8
+  player:
+    name: player
+    replication-factor: 3
+    partitions: 8
+  ball:
+    name: ball
+    replication-factor: 3
+    partitions: 8
 
 spring:
   kafka:

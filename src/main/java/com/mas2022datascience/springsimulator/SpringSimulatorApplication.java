@@ -1,7 +1,9 @@
 package com.mas2022datascience.springsimulator;
 
+import com.mas2022datascience.avro.v1.ballMetrics;
 import com.mas2022datascience.avro.v1.playerMetrics;
-import com.mas2022datascience.springsimulator.producer.KafkaProducer;
+import com.mas2022datascience.springsimulator.producer.KafkaPlayerProducer;
+import com.mas2022datascience.springsimulator.producer.KafkaBallProducer;
 import java.io.File;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -26,7 +28,10 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 	private static Logger LOG = LoggerFactory.getLogger(SpringSimulatorApplication.class);
 
 	@Autowired
-	private KafkaProducer kafkaProducer;
+	private KafkaPlayerProducer kafkaPlayerProducer;
+
+	@Autowired
+	private KafkaBallProducer kafkaBallProducer;
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringSimulatorApplication.class, args);
@@ -124,7 +129,6 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							String objId = objElem.getAttribute("id");
 							String objX = objElem.getAttribute("x");
 							String objY = objElem.getAttribute("y");
-							//String objZ = objElem.getAttribute("z");
 							String objSampling = objElem.getAttribute("sampling");
 
 							// not the ball
@@ -132,6 +136,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 								//player
 								playerMetrics playerMetric = playerMetrics.newBuilder()
 										.setCreatedAt(Instant.ofEpochMilli(utc))
+										.setPlayerId(Integer.parseInt(objId))
 										.setX(Integer.parseInt(objX))
 										.setY(Integer.parseInt(objY))
 										.setVelocity(0)
@@ -142,10 +147,22 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 										.setControlIndex(0.0)
 										.setZone(0)
 										.build();
-								kafkaProducer.produce(matchId,playerMetric);
+								kafkaPlayerProducer.produce(matchId,playerMetric);
 							} else {
 								//ball
-
+								String objZ = objElem.getAttribute("z");
+								ballMetrics ballMetric = ballMetrics.newBuilder()
+										.setCreatedAt(Instant.ofEpochMilli(utc))
+										.setX(Integer.parseInt(objX))
+										.setY(Integer.parseInt(objY))
+										.setZ(Integer.parseInt(objZ))
+										.setVelocity(0)
+										.setVelocityVector(Arrays.asList(0.0, 0.0))
+										.setAcceleration(0)
+										.setAccelerationVector(Arrays.asList(0.0, 0.0))
+										.setZone(0)
+										.build();
+								kafkaBallProducer.produce(matchId,ballMetric);
 							}
 						}
 					}
