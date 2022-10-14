@@ -1,9 +1,7 @@
 package com.mas2022datascience.springsimulator;
 
-import com.mas2022datascience.avro.v1.ballMetrics;
-import com.mas2022datascience.avro.v1.playerMetrics;
-import com.mas2022datascience.springsimulator.producer.KafkaPlayerProducer;
-import com.mas2022datascience.springsimulator.producer.KafkaBallProducer;
+import com.mas2022datascience.avro.v1.rawMetrics;
+import com.mas2022datascience.springsimulator.producer.KafkaRawProducer;
 import java.io.File;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -28,10 +26,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 	private static Logger LOG = LoggerFactory.getLogger(SpringSimulatorApplication.class);
 
 	@Autowired
-	private KafkaPlayerProducer kafkaPlayerProducer;
+	private KafkaRawProducer kafkaRawProducer;
 
-	@Autowired
-	private KafkaBallProducer kafkaBallProducer;
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringSimulatorApplication.class, args);
@@ -103,6 +99,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 				if (frameNode.getNodeType() == Node.ELEMENT_NODE) {
 					Element frameElem = (Element) frameNode;
 
+					String isBallInPlayString = frameElem.getAttribute("isBallInPlay");
 					//2019-06-05T18:53:18.003
 					String utcString = frameElem.getAttribute("utc");
 					// fix utc time format
@@ -116,9 +113,6 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 					DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
 							.withZone(ZoneOffset.UTC);;
 					long utc = Instant.from(fmt.parse(utcString)).toEpochMilli();
-					if (utcString.equals("2019-06-05T18:43:09.413")) {
-						System.out.println("test");
-					}
 
 					NodeList objNodeList = frameElem.getElementsByTagName("Obj");
 					for (int i = 0; i < objNodeList.getLength(); i++) {
@@ -134,11 +128,12 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							// not the ball
 							if (!objId.equals("0")){
 								//player
-								playerMetrics playerMetric = playerMetrics.newBuilder()
+								rawMetrics playerMetric = rawMetrics.newBuilder()
 										.setCreatedAt(Instant.ofEpochMilli(utc))
-										.setPlayerId(Integer.parseInt(objId))
+										.setId(Integer.parseInt(objId))
 										.setX(Integer.parseInt(objX))
 										.setY(Integer.parseInt(objY))
+										.setZ(0)
 										.setVelocity(0)
 										.setVelocityVector(Arrays.asList(0.0, 0.0))
 										.setAcceleration(0)
@@ -147,12 +142,13 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 										.setControlIndex(0.0)
 										.setZone(0)
 										.build();
-								kafkaPlayerProducer.produce(matchId,playerMetric);
+								kafkaRawProducer.produce(matchId,playerMetric);
 							} else {
 								//ball
 								String objZ = objElem.getAttribute("z");
-								ballMetrics ballMetric = ballMetrics.newBuilder()
+								rawMetrics ballMetric = rawMetrics.newBuilder()
 										.setCreatedAt(Instant.ofEpochMilli(utc))
+										.setId(Integer.parseInt(objId))
 										.setX(Integer.parseInt(objX))
 										.setY(Integer.parseInt(objY))
 										.setZ(Integer.parseInt(objZ))
@@ -160,9 +156,11 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 										.setVelocityVector(Arrays.asList(0.0, 0.0))
 										.setAcceleration(0)
 										.setAccelerationVector(Arrays.asList(0.0, 0.0))
+										.setPressingIndex(0.0)
+										.setControlIndex(0.0)
 										.setZone(0)
 										.build();
-								kafkaBallProducer.produce(matchId,ballMetric);
+								kafkaRawProducer.produce(matchId,ballMetric);
 							}
 						}
 					}

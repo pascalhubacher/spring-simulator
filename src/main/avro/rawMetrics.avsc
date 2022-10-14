@@ -1,8 +1,8 @@
 {
-  "name": "playerMetrics",
+  "name": "rawMetrics",
   "namespace": "com.mas2022datascience.avro.v1",
   "type": "record",
-  "description" : "A player Event",
+  "description" : "A player or ball event",
   "fields": [
     {   "name" : "createdAt",
       "type" : {
@@ -11,7 +11,7 @@
       }
     },
     {
-      "name": "playerId",
+      "name": "id",
       "type": "int"
     },
     {
@@ -20,6 +20,10 @@
     },
     {
       "name": "y",
+      "type": "int"
+    },
+    {
+      "name": "z",
       "type": "int"
     },
     {

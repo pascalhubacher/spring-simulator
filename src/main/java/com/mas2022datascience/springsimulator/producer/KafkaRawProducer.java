@@ -1,6 +1,6 @@
 package com.mas2022datascience.springsimulator.producer;
 
-import com.mas2022datascience.avro.v1.playerMetrics;
+import com.mas2022datascience.avro.v1.rawMetrics;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -11,20 +11,20 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 
 @Component
-public class KafkaPlayerProducer {
+public class KafkaRawProducer {
   @Autowired
-  private KafkaTemplate<String, playerMetrics> kafkaTemplate;
+  private KafkaTemplate<String, rawMetrics> kafkaTemplate;
 
-  @Value(value = "${topic.player.name}")
-  private String playerTopic;
+  @Value(value = "${topic.raw.name}")
+  private String rawTopic;
 
-  public void produce(String key, playerMetrics value) {
+  public void produce(String key, rawMetrics value) {
 
     long time = System.currentTimeMillis();
 
-    SendResult<String, playerMetrics> result = null;
+    SendResult<String, rawMetrics> result = null;
     try {
-      result = kafkaTemplate.send(playerTopic, key, value).get(10, TimeUnit.SECONDS);
+      result = kafkaTemplate.send(rawTopic, key, value).get(10, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       e.printStackTrace();
     } catch (ExecutionException e) {
