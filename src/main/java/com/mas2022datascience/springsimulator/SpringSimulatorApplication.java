@@ -126,6 +126,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							String objSampling = objElem.getAttribute("sampling");
 
 							// not the ball
+							String key = matchId+"."+objId;
 							if (!objId.equals("0")){
 								//player
 								rawMetrics playerMetric = rawMetrics.newBuilder()
@@ -142,7 +143,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 										.setControlIndex(0.0)
 										.setZone(0)
 										.build();
-								kafkaRawProducer.produce(matchId,playerMetric);
+								kafkaRawProducer.produce(key,playerMetric);
 							} else {
 								//ball
 								String objZ = objElem.getAttribute("z");
@@ -160,7 +161,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 										.setControlIndex(0.0)
 										.setZone(0)
 										.build();
-								kafkaRawProducer.produce(matchId,ballMetric);
+								kafkaRawProducer.produce(key,ballMetric);
 							}
 						}
 					}
