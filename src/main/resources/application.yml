@@ -3,6 +3,10 @@ topic:
     name: raw
     replication-factor: 3
     partitions: 8
+  tracab:
+    name: tracab
+    replication-factor: 3
+    partitions: 8
 
 spring:
   kafka:

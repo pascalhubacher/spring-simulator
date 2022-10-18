@@ -1,12 +1,15 @@
 package com.mas2022datascience.springsimulator;
 
-import com.mas2022datascience.avro.v1.rawMetrics;
-import com.mas2022datascience.springsimulator.producer.KafkaRawProducer;
+import com.mas2022datascience.avro.v1.Competition;
+import com.mas2022datascience.avro.v1.Frame;
+import com.mas2022datascience.avro.v1.Match;
+import com.mas2022datascience.avro.v1.Object;
+import com.mas2022datascience.avro.v1.Phase;
+import com.mas2022datascience.avro.v1.Stadium;
+import com.mas2022datascience.springsimulator.producer.KafkaTracabProducer;
 import java.io.File;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.slf4j.Logger;
@@ -25,9 +28,11 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 
 	private static Logger LOG = LoggerFactory.getLogger(SpringSimulatorApplication.class);
 
-	@Autowired
-	private KafkaRawProducer kafkaRawProducer;
+	//@Autowired
+	//private KafkaRawProducer kafkaRawProducer;
 
+	@Autowired
+	private KafkaTracabProducer kafkaTracabProducer;
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringSimulatorApplication.class, args);
@@ -57,31 +62,57 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 			Node matchNode = matchNodeList.item(0);
 			Element matchElem = (Element) matchNode;
 			String matchId = matchElem.getAttribute("id");
+			Match match = Match.newBuilder()
+					.setId(Integer.parseInt(matchId))
+					.setDateMatch(matchElem.getAttribute("dateMatch"))
+					.setMatchNumber(Integer.parseInt(matchElem.getAttribute("matchNumber")))
+					.build();
 			//<Match id="2024419" dateMatch="2019-06-05T18:45:00" matchNumber="139">
 
 			//Competition Information
 			NodeList competitionNodeList = doc.getElementsByTagName("Competition");
 			Node competitionNode = competitionNodeList.item(0);
 			Element competitionElem = (Element) competitionNode;
-			String competitionId = competitionElem.getAttribute("id");
+			Competition competition = Competition.newBuilder()
+					.setId(Integer.parseInt(competitionElem.getAttribute("id")))
+					.setName(competitionElem.getAttribute("name"))
+					.build();
 			//<Competition id="20192" name="UEFA Nations League 2019" />
 
 			//Stadium Information
 			NodeList stadiumNodeList = doc.getElementsByTagName("Stadium");
 			Node stadiumNode = stadiumNodeList.item(0);
 			Element stadiumElem = (Element) stadiumNode;
-			String stadiumId = stadiumElem.getAttribute("id");
+			Stadium stadium = Stadium.newBuilder()
+					.setId(Integer.parseInt(stadiumElem.getAttribute("id")))
+					.setName(stadiumElem.getAttribute("name"))
+					.setPitchLength(Integer.parseInt(stadiumElem.getAttribute("pitchLength")))
+					.setPitchWidth(Integer.parseInt(stadiumElem.getAttribute("pitchWidth")))
+					.build();
 			//<Stadium id="85429" name="Estádio do Dragão" pitchLength="10500" pitchWidth="6800" />
 
 			//Phases Information
+			List<Phase> phases = new ArrayList();
 			NodeList phaseNodeList = doc.getElementsByTagName("Phase");
 			Node phaseNode = phaseNodeList.item(0);
 			Element phaseElem = (Element) phaseNode;
-			String phaseStart = phaseElem.getAttribute("start");
+			phases.add(
+					Phase.newBuilder()
+							.setStart(phaseElem.getAttribute("start"))
+							.setEnd(phaseElem.getAttribute("end"))
+							.setLeftTeamID(Integer.parseInt(phaseElem.getAttribute("leftTeamID")))
+							.build()
+			);
 			//<Phase start="2019-06-05T18:46:49.43" end="2019-06-05T19:32:53.14" leftTeamID="110" />
 			phaseNode = phaseNodeList.item(1);
 			phaseElem = (Element) phaseNode;
-			phaseStart = phaseElem.getAttribute("start");
+			phases.add(
+					Phase.newBuilder()
+					.setStart(phaseElem.getAttribute("start"))
+					.setEnd(phaseElem.getAttribute("end"))
+					.setLeftTeamID(Integer.parseInt(phaseElem.getAttribute("leftTeamID")))
+					.build()
+			);
 			//<Phase start="2019-06-05T19:47:59.794" end="2019-06-05T20:38:38.079" leftTeamID="128" />
 
 			// Ball and Player Information
@@ -100,70 +131,109 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 					Element frameElem = (Element) frameNode;
 
 					String isBallInPlayString = frameElem.getAttribute("isBallInPlay");
-					//2019-06-05T18:53:18.003
-					String utcString = frameElem.getAttribute("utc");
-					// fix utc time format
-					if (utcString.length() == 19) {
-						utcString = utcString + ".000";
-					}
-					utcString = (utcString + "000").substring(0, 23);
 
-					System.out.println(utcString);
+					// only collect frames when ball is in play
+					if (isBallInPlayString.equals("1")) {
+						String utcString = frameElem.getAttribute("utc");
+						// fix utc time format
+						if (utcString.length() == 19) {
+							utcString = utcString + ".000";
+						}
+						utcString = (utcString + "000").substring(0, 23);
+//					DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+//							.withZone(ZoneOffset.UTC);;
+//					long utc = Instant.from(fmt.parse(utcString)).toEpochMilli();
+						String ballPossession = frameElem.getAttribute("ballPossession");
+//					<Frame utc="2019-06-05T18:47:25.843" isBallInPlay="1" ballPossession="Away">
 
-					DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-							.withZone(ZoneOffset.UTC);;
-					long utc = Instant.from(fmt.parse(utcString)).toEpochMilli();
+						System.out.println(utcString);
 
-					NodeList objNodeList = frameElem.getElementsByTagName("Obj");
-					for (int i = 0; i < objNodeList.getLength(); i++) {
-						Node objNode = objNodeList.item(i);
-						if (objNode.getNodeType() == Node.ELEMENT_NODE) {
-							Element objElem = (Element) objNode;
-							String objType = objElem.getAttribute("type");
-							String objId = objElem.getAttribute("id");
-							String objX = objElem.getAttribute("x");
-							String objY = objElem.getAttribute("y");
-							String objSampling = objElem.getAttribute("sampling");
+						List<Object> objects = new ArrayList();
+						NodeList objNodeList = frameElem.getElementsByTagName("Obj");
+						for (int i = 0; i < objNodeList.getLength(); i++) {
+							Node objNode = objNodeList.item(i);
+							if (objNode.getNodeType() == Node.ELEMENT_NODE) {
+								Element objElem = (Element) objNode;
+//							String objType = objElem.getAttribute("type");
+								String objId = objElem.getAttribute("id");
+//							String objX = objElem.getAttribute("x");
+//							String objY = objElem.getAttribute("y");
+//							String objSampling = objElem.getAttribute("sampling");
 
-							// not the ball
-							String key = matchId+"."+objId;
-							if (!objId.equals("0")){
-								//player
-								rawMetrics playerMetric = rawMetrics.newBuilder()
-										.setCreatedAt(Instant.ofEpochMilli(utc))
-										.setId(Integer.parseInt(objId))
-										.setX(Integer.parseInt(objX))
-										.setY(Integer.parseInt(objY))
-										.setZ(0)
-										.setVelocity(0)
-										.setVelocityVector(Arrays.asList(0.0, 0.0))
-										.setAcceleration(0)
-										.setAccelerationVector(Arrays.asList(0.0, 0.0))
-										.setPressingIndex(0.0)
-										.setControlIndex(0.0)
-										.setZone(0)
-										.build();
-								kafkaRawProducer.produce(key,playerMetric);
-							} else {
-								//ball
-								String objZ = objElem.getAttribute("z");
-								rawMetrics ballMetric = rawMetrics.newBuilder()
-										.setCreatedAt(Instant.ofEpochMilli(utc))
-										.setId(Integer.parseInt(objId))
-										.setX(Integer.parseInt(objX))
-										.setY(Integer.parseInt(objY))
-										.setZ(Integer.parseInt(objZ))
-										.setVelocity(0)
-										.setVelocityVector(Arrays.asList(0.0, 0.0))
-										.setAcceleration(0)
-										.setAccelerationVector(Arrays.asList(0.0, 0.0))
-										.setPressingIndex(0.0)
-										.setControlIndex(0.0)
-										.setZone(0)
-										.build();
-								kafkaRawProducer.produce(key,ballMetric);
+								// not the ball
+								//String key = matchId+"."+objId;
+
+								if (!objId.equals("0")){
+									objects.add(
+											Object.newBuilder()
+													.setId(objElem.getAttribute("id"))
+													.setType(Integer.parseInt(objElem.getAttribute("type")))
+													.setX(Integer.parseInt(objElem.getAttribute("x")))
+													.setY(Integer.parseInt(objElem.getAttribute("y")))
+													.setZ(0)
+													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
+													.build()
+									);
+									//player
+//								rawMetrics playerMetric = rawMetrics.newBuilder()
+//										.setCreatedAt(Instant.ofEpochMilli(utc))
+//										.setId(Integer.parseInt(objId))
+//										.setX(Integer.parseInt(objX))
+//										.setY(Integer.parseInt(objY))
+//										.setZ(0)
+//										.setVelocity(0)
+//										.setVelocityVector(Arrays.asList(0.0, 0.0))
+//										.setAcceleration(0)
+//										.setAccelerationVector(Arrays.asList(0.0, 0.0))
+//										.setPressingIndex(0.0)
+//										.setControlIndex(0.0)
+//										.setZone(0)
+//										.build();
+//								kafkaRawProducer.produce(key,playerMetric);
+								} else {
+									//ball
+									objects.add(
+											Object.newBuilder()
+													.setId(objElem.getAttribute("id"))
+													.setType(Integer.parseInt(objElem.getAttribute("type")))
+													.setX(Integer.parseInt(objElem.getAttribute("x")))
+													.setY(Integer.parseInt(objElem.getAttribute("y")))
+													.setZ(Integer.parseInt(objElem.getAttribute("z")))
+													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
+													.build()
+									);
+									String objZ = objElem.getAttribute("z");
+//								rawMetrics ballMetric = rawMetrics.newBuilder()
+//										.setCreatedAt(Instant.ofEpochMilli(utc))
+//										.setId(Integer.parseInt(objId))
+//										.setX(Integer.parseInt(objX))
+//										.setY(Integer.parseInt(objY))
+//										.setZ(Integer.parseInt(objZ))
+//										.setVelocity(0)
+//										.setVelocityVector(Arrays.asList(0.0, 0.0))
+//										.setAcceleration(0)
+//										.setAccelerationVector(Arrays.asList(0.0, 0.0))
+//										.setPressingIndex(0.0)
+//										.setControlIndex(0.0)
+//										.setZone(0)
+//										.build();
+//								kafkaRawProducer.produce(key,ballMetric);
+								}
 							}
 						}
+						String key = matchId;
+						kafkaTracabProducer.produce(key,
+								Frame.newBuilder()
+										.setUtc(utcString)
+										.setBallPossession(ballPossession)
+										.setIsBallInPlay(Integer.parseInt(isBallInPlayString))
+										.setObjects(objects)
+										.setMatch(match)
+										.setStadium(stadium)
+										.setPhases(phases)
+										.setCompetition(competition)
+										.build()
+						);
 					}
 				}
 			}
