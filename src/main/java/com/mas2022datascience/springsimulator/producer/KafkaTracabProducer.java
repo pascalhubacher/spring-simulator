@@ -16,7 +16,7 @@ public class KafkaTracabProducer {
   private KafkaTemplate<String, Frame> kafkaTemplate;
 
   @Value(value = "${topic.tracab.name}")
-  private String rawTopic;
+  private String tracabTopic;
 
   public void produce(String key, Frame value) {
 
@@ -24,7 +24,7 @@ public class KafkaTracabProducer {
 
     SendResult<String, Frame> result = null;
     try {
-      result = kafkaTemplate.send(rawTopic, key, value).get(10, TimeUnit.SECONDS);
+      result = kafkaTemplate.send(tracabTopic, key, value).get(10, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       e.printStackTrace();
     } catch (ExecutionException e) {
@@ -34,10 +34,11 @@ public class KafkaTracabProducer {
     }
 
     long elapsedTime = System.currentTimeMillis() - time;
-    System.out.printf("sent record(key=%s value=%s) "
-            + "meta(partition=%d, offset=%d) time=%d\n",
-        key, value, result.getRecordMetadata().partition(),
-        result.getRecordMetadata().offset(), elapsedTime);
+    System.out.printf("sent record(key=%s, offset=%d)\n",key,result.getRecordMetadata().offset());
+//    System.out.printf("sent record(key=%s value=%s) "
+//            + "meta(partition=%d, offset=%d) time=%d\n",
+//        key, value, result.getRecordMetadata().partition(),
+//        result.getRecordMetadata().offset(), elapsedTime);
   }
 
 }
