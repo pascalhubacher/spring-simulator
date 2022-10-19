@@ -1,12 +1,12 @@
 topic:
   raw:
     name: raw
-    replication-factor: 3
-    partitions: 8
+    replication-factor: 2
+    partitions: 3
   tracab:
-    name: tracab
-    replication-factor: 3
-    partitions: 8
+    name: tracab-01-raw
+    replication-factor: 2
+    partitions: 3
 
 spring:
   kafka:
@@ -16,10 +16,10 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
-      retries: 0
+      retries: 1
       buffer-memory: 33554432
       properties:
-        auto.register.schemas: false
+        auto.register.schemas: true
         use.latest.version: true
     properties:
       schema.registry.url: "http://${DATAPLATFORM_IP}:8081"
