@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -35,7 +36,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 	private KafkaTracabProducer kafkaTracabProducer;
 
 	public static void main(String[] args) {
-		SpringApplication.run(SpringSimulatorApplication.class, args);
+		ConfigurableApplicationContext ctx = SpringApplication.run(SpringSimulatorApplication.class, args);
+		SpringApplication.exit(ctx, () -> 0);
 	}
 
 	@Override
@@ -146,22 +148,13 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 						String ballPossession = frameElem.getAttribute("ballPossession");
 //					<Frame utc="2019-06-05T18:47:25.843" isBallInPlay="1" ballPossession="Away">
 
-						System.out.println(utcString);
-
 						List<Object> objects = new ArrayList();
 						NodeList objNodeList = frameElem.getElementsByTagName("Obj");
 						for (int i = 0; i < objNodeList.getLength(); i++) {
 							Node objNode = objNodeList.item(i);
 							if (objNode.getNodeType() == Node.ELEMENT_NODE) {
 								Element objElem = (Element) objNode;
-//							String objType = objElem.getAttribute("type");
 								String objId = objElem.getAttribute("id");
-//							String objX = objElem.getAttribute("x");
-//							String objY = objElem.getAttribute("y");
-//							String objSampling = objElem.getAttribute("sampling");
-
-								// not the ball
-								//String key = matchId+"."+objId;
 
 								if (!objId.equals("0")){
 									objects.add(
@@ -174,22 +167,6 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
 													.build()
 									);
-									//player
-//								rawMetrics playerMetric = rawMetrics.newBuilder()
-//										.setCreatedAt(Instant.ofEpochMilli(utc))
-//										.setId(Integer.parseInt(objId))
-//										.setX(Integer.parseInt(objX))
-//										.setY(Integer.parseInt(objY))
-//										.setZ(0)
-//										.setVelocity(0)
-//										.setVelocityVector(Arrays.asList(0.0, 0.0))
-//										.setAcceleration(0)
-//										.setAccelerationVector(Arrays.asList(0.0, 0.0))
-//										.setPressingIndex(0.0)
-//										.setControlIndex(0.0)
-//										.setZone(0)
-//										.build();
-//								kafkaRawProducer.produce(key,playerMetric);
 								} else {
 									//ball
 									objects.add(
@@ -202,26 +179,10 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
 													.build()
 									);
-									String objZ = objElem.getAttribute("z");
-//								rawMetrics ballMetric = rawMetrics.newBuilder()
-//										.setCreatedAt(Instant.ofEpochMilli(utc))
-//										.setId(Integer.parseInt(objId))
-//										.setX(Integer.parseInt(objX))
-//										.setY(Integer.parseInt(objY))
-//										.setZ(Integer.parseInt(objZ))
-//										.setVelocity(0)
-//										.setVelocityVector(Arrays.asList(0.0, 0.0))
-//										.setAcceleration(0)
-//										.setAccelerationVector(Arrays.asList(0.0, 0.0))
-//										.setPressingIndex(0.0)
-//										.setControlIndex(0.0)
-//										.setZone(0)
-//										.build();
-//								kafkaRawProducer.produce(key,ballMetric);
 								}
 							}
 						}
-						String key = matchId;
+						String key = matchId+"-"+utcString;
 						kafkaTracabProducer.produce(key,
 								Frame.newBuilder()
 										.setUtc(utcString)
