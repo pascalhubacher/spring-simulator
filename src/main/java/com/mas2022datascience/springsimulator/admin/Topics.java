@@ -9,22 +9,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class Topics {
 
-  @Value(value = "${topic.raw.name}")
-  private String rawTopic;
-  @Value(value = "${topic.raw.partitions}")
-  private Integer rawTopicPartitions;
-  @Value(value = "${topic.raw.replication-factor}")
-  private Integer rawTopicReplicationFactor;
-
-  // creates or alters the topic
-  @Bean
-  public NewTopic raw() {
-    return TopicBuilder.name(rawTopic)
-        .partitions(rawTopicPartitions)
-        .replicas(rawTopicReplicationFactor)
-        .build();
-  }
-
   @Value(value = "${topic.tracab.name}")
   private String tracabTopic;
   @Value(value = "${topic.tracab.partitions}")
