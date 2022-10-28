@@ -1,8 +1,4 @@
 topic:
-  raw:
-    name: raw
-    replication-factor: 2
-    partitions: 3
   tracab:
     name: tracab-01-raw
     replication-factor: 2
