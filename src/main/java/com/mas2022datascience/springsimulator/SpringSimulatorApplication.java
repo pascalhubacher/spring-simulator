@@ -29,9 +29,6 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 
 	private static Logger LOG = LoggerFactory.getLogger(SpringSimulatorApplication.class);
 
-	//@Autowired
-	//private KafkaRawProducer kafkaRawProducer;
-
 	@Autowired
 	private KafkaTracabProducer kafkaTracabProducer;
 
@@ -165,6 +162,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 													.setY(Integer.parseInt(objElem.getAttribute("y")))
 													.setZ(0)
 													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
+													.setVelocity(0)
+													.setAccelleration(0)
 													.build()
 									);
 								} else {
@@ -177,6 +176,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 													.setY(Integer.parseInt(objElem.getAttribute("y")))
 													.setZ(Integer.parseInt(objElem.getAttribute("z")))
 													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
+													.setVelocity(0)
+													.setAccelleration(0)
 													.build()
 									);
 								}
