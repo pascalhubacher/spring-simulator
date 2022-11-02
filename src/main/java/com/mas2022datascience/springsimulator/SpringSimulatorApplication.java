@@ -97,8 +97,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 			Element phaseElem = (Element) phaseNode;
 			phases.add(
 					Phase.newBuilder()
-							.setStart(phaseElem.getAttribute("start"))
-							.setEnd(phaseElem.getAttribute("end"))
+							.setStart(fixUtcString(phaseElem.getAttribute("start")))
+							.setEnd(fixUtcString(phaseElem.getAttribute("end")))
 							.setLeftTeamID(Integer.parseInt(phaseElem.getAttribute("leftTeamID")))
 							.build()
 			);
@@ -107,8 +107,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 			phaseElem = (Element) phaseNode;
 			phases.add(
 					Phase.newBuilder()
-					.setStart(phaseElem.getAttribute("start"))
-					.setEnd(phaseElem.getAttribute("end"))
+					.setStart(fixUtcString(phaseElem.getAttribute("start")))
+					.setEnd(fixUtcString(phaseElem.getAttribute("end")))
 					.setLeftTeamID(Integer.parseInt(phaseElem.getAttribute("leftTeamID")))
 					.build()
 			);
@@ -134,11 +134,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 					// only collect frames when ball is in play
 					if (isBallInPlayString.equals("1")) {
 						String utcString = frameElem.getAttribute("utc");
-						// fix utc time format
-						if (utcString.length() == 19) {
-							utcString = utcString + ".000";
-						}
-						utcString = (utcString + "000").substring(0, 23);
+						utcString = fixUtcString(utcString);
 //					DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
 //							.withZone(ZoneOffset.UTC);;
 //					long utc = Instant.from(fmt.parse(utcString)).toEpochMilli();
@@ -204,5 +200,14 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 		{
 			e.printStackTrace();
 		}
+	}
+
+	private static String fixUtcString(String utcString) {
+		// fix utc time format
+		if (utcString.length() == 19) {
+			utcString = utcString + ".000";
+		}
+		utcString = (utcString + "000").substring(0, 23);
+		return utcString;
 	}
 }
