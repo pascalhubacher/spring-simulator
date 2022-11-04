@@ -181,18 +181,18 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 					if (checkInPhases(utcString, phases)) {
 						// only collect frames when ball is in play
 						if (isBallInPlayString.equals("0") || isBallInPlayString.equals("1")) {
-						kafkaTracabProducer.produce(key,
-								Frame.newBuilder()
-										.setUtc(utcString)
-										.setBallPossession(ballPossession)
-										.setIsBallInPlay(Integer.parseInt(isBallInPlayString))
-										.setObjects(objects)
-										.setMatch(match)
-										.setStadium(stadium)
-										.setPhases(phases)
-										.setCompetition(competition)
-										.build()
-								);
+							kafkaTracabProducer.produce(key,
+									Frame.newBuilder()
+											.setUtc(utcString)
+											.setBallPossession(ballPossession)
+											.setIsBallInPlay(Integer.parseInt(isBallInPlayString))
+											.setObjects(objects)
+											.setMatch(match)
+											.setStadium(stadium)
+											.setPhases(phases)
+											.setCompetition(competition)
+											.build()
+							);
 						}
 					}
 				}
