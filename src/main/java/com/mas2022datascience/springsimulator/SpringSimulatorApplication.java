@@ -8,6 +8,9 @@ import com.mas2022datascience.avro.v1.Phase;
 import com.mas2022datascience.avro.v1.Stadium;
 import com.mas2022datascience.springsimulator.producer.KafkaTracabProducer;
 import java.io.File;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
@@ -131,51 +134,53 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 
 					String isBallInPlayString = frameElem.getAttribute("isBallInPlay");
 
-					// only collect frames when ball is in play
-					if (isBallInPlayString.equals("1")) {
-						String utcString = frameElem.getAttribute("utc");
-						utcString = fixUtcString(utcString);
+					String utcString = frameElem.getAttribute("utc");
+					utcString = fixUtcString(utcString);
 //					DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
 //							.withZone(ZoneOffset.UTC);;
 //					long utc = Instant.from(fmt.parse(utcString)).toEpochMilli();
-						String ballPossession = frameElem.getAttribute("ballPossession");
+					String ballPossession = frameElem.getAttribute("ballPossession");
 //					<Frame utc="2019-06-05T18:47:25.843" isBallInPlay="1" ballPossession="Away">
 
-						List<Object> objects = new ArrayList();
-						NodeList objNodeList = frameElem.getElementsByTagName("Obj");
-						for (int i = 0; i < objNodeList.getLength(); i++) {
-							Node objNode = objNodeList.item(i);
-							if (objNode.getNodeType() == Node.ELEMENT_NODE) {
-								Element objElem = (Element) objNode;
-								String objId = objElem.getAttribute("id");
+					List<Object> objects = new ArrayList();
+					NodeList objNodeList = frameElem.getElementsByTagName("Obj");
+					for (int i = 0; i < objNodeList.getLength(); i++) {
+						Node objNode = objNodeList.item(i);
+						if (objNode.getNodeType() == Node.ELEMENT_NODE) {
+							Element objElem = (Element) objNode;
+							String objId = objElem.getAttribute("id");
 
-								if (!objId.equals("0")){
-									objects.add(
-											Object.newBuilder()
-													.setId(objElem.getAttribute("id"))
-													.setType(Integer.parseInt(objElem.getAttribute("type")))
-													.setX(Integer.parseInt(objElem.getAttribute("x")))
-													.setY(Integer.parseInt(objElem.getAttribute("y")))
-													.setZ(0)
-													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
-													.build()
-									);
-								} else {
-									//ball
-									objects.add(
-											Object.newBuilder()
-													.setId(objElem.getAttribute("id"))
-													.setType(Integer.parseInt(objElem.getAttribute("type")))
-													.setX(Integer.parseInt(objElem.getAttribute("x")))
-													.setY(Integer.parseInt(objElem.getAttribute("y")))
-													.setZ(Integer.parseInt(objElem.getAttribute("z")))
-													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
-													.build()
-									);
-								}
+							if (!objId.equals("0")){
+								objects.add(
+										Object.newBuilder()
+												.setId(objElem.getAttribute("id"))
+												.setType(Integer.parseInt(objElem.getAttribute("type")))
+												.setX(Integer.parseInt(objElem.getAttribute("x")))
+												.setY(Integer.parseInt(objElem.getAttribute("y")))
+												.setZ(0)
+												.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
+												.build()
+								);
+							} else {
+								//ball
+								objects.add(
+										Object.newBuilder()
+												.setId(objElem.getAttribute("id"))
+												.setType(Integer.parseInt(objElem.getAttribute("type")))
+												.setX(Integer.parseInt(objElem.getAttribute("x")))
+												.setY(Integer.parseInt(objElem.getAttribute("y")))
+												.setZ(Integer.parseInt(objElem.getAttribute("z")))
+												.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
+												.build()
+								);
 							}
 						}
-						String key = matchId;
+					}
+					String key = matchId;
+					// only create events if the timestamp is within the phases
+					if (checkInPhases(utcString, phases)) {
+						// only collect frames when ball is in play
+						if (isBallInPlayString.equals("0") || isBallInPlayString.equals("1")) {
 						kafkaTracabProducer.produce(key,
 								Frame.newBuilder()
 										.setUtc(utcString)
@@ -187,7 +192,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 										.setPhases(phases)
 										.setCompetition(competition)
 										.build()
-						);
+								);
+						}
 					}
 				}
 			}
@@ -198,6 +204,11 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 		}
 	}
 
+	/**
+	 * if the UTC string is not correctly formatted (yyyy-MM-dd'T'HH:mm:ss.SSS) it gets corrected
+	 * @param utcString
+	 * @return
+	 */
 	private static String fixUtcString(String utcString) {
 		// fix utc time format
 		if (utcString.length() == 19) {
@@ -205,5 +216,40 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 		}
 		utcString = (utcString + "000").substring(0, 23);
 		return utcString;
+	}
+
+	/**
+	 * Convertes the utc string of type "yyyy-MM-dd'T'HH:mm:ss.SSS" to epoc time in milliseconds.
+	 * @param utcString
+	 * @return epoc time in milliseconds
+	 */
+	private static long utcString2epocMs(String utcString) {
+		DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+				.withZone(ZoneOffset.UTC);
+
+		return Instant.from(fmt.parse(utcString)).toEpochMilli();
+	}
+
+	/**
+	 * check if the current utcString timestamp is withing the phases then it returns true.
+	 * Otherwise it returns false.
+	 * @param utcString
+	 * @return
+	 */
+	private boolean checkInPhases(String utcString, List<Phase> phases) {
+		long firstHalfStart = utcString2epocMs(phases.get(0).getStart());
+		long firstHalfEnd = utcString2epocMs(phases.get(0).getEnd());
+		long secondHalfStart = utcString2epocMs(phases.get(1).getStart());
+		long secondHalfEnd = utcString2epocMs(phases.get(1).getEnd());
+
+		long actualTimestamp = utcString2epocMs(utcString);
+
+		if (actualTimestamp > firstHalfStart && actualTimestamp < firstHalfEnd) {
+			return true;
+		}
+		if (actualTimestamp > secondHalfStart && actualTimestamp < secondHalfEnd) {
+			return true;
+		}
+		return false;
 	}
 }
