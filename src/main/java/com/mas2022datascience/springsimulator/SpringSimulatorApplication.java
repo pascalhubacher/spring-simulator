@@ -30,7 +30,7 @@ import org.w3c.dom.NodeList;
 @SpringBootApplication
 public class SpringSimulatorApplication implements CommandLineRunner {
 
-	private static Logger LOG = LoggerFactory.getLogger(SpringSimulatorApplication.class);
+	final private static Logger LOG = LoggerFactory.getLogger(SpringSimulatorApplication.class);
 
 	@Autowired
 	private KafkaTracabProducer kafkaTracabProducer;
@@ -41,7 +41,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
+	public void run(String... args) {
 		LOG.info("");
 		if (args.length == 0) {
 			runProducer();
@@ -94,7 +94,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 			//<Stadium id="85429" name="Estádio do Dragão" pitchLength="10500" pitchWidth="6800" />
 
 			//Phases Information
-			List<Phase> phases = new ArrayList();
+			List<Phase> phases = new ArrayList<>();
 			NodeList phaseNodeList = doc.getElementsByTagName("Phase");
 			Node phaseNode = phaseNodeList.item(0);
 			Element phaseElem = (Element) phaseNode;
@@ -136,13 +136,10 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 
 					String utcString = frameElem.getAttribute("utc");
 					utcString = fixUtcString(utcString);
-//					DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-//							.withZone(ZoneOffset.UTC);;
-//					long utc = Instant.from(fmt.parse(utcString)).toEpochMilli();
 					String ballPossession = frameElem.getAttribute("ballPossession");
 //					<Frame utc="2019-06-05T18:47:25.843" isBallInPlay="1" ballPossession="Away">
 
-					List<Object> objects = new ArrayList();
+					List<Object> objects = new ArrayList<>();
 					NodeList objNodeList = frameElem.getElementsByTagName("Obj");
 					for (int i = 0; i < objNodeList.getLength(); i++) {
 						Node objNode = objNodeList.item(i);
@@ -176,12 +173,11 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							}
 						}
 					}
-					String key = matchId;
 					// only create events if the timestamp is within the phases
 					if (checkInPhases(utcString, phases)) {
 						// only collect frames when ball is in play
 						if (isBallInPlayString.equals("0") || isBallInPlayString.equals("1")) {
-							kafkaTracabProducer.produce(key,
+							kafkaTracabProducer.produce(matchId,
 									Frame.newBuilder()
 											.setUtc(utcString)
 											.setBallPossession(ballPossession)
@@ -206,8 +202,8 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 
 	/**
 	 * if the UTC string is not correctly formatted (yyyy-MM-dd'T'HH:mm:ss.SSS) it gets corrected
-	 * @param utcString
-	 * @return
+	 * @param utcString of type String of format 'yyyy-MM-dd'T'HH:mm:ss.SSS'
+	 * @return fixed utcString of format 'yyyy-MM-dd'T'HH:mm:ss.SSS'
 	 */
 	private static String fixUtcString(String utcString) {
 		// fix utc time format
@@ -220,7 +216,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 
 	/**
 	 * Convertes the utc string of type "yyyy-MM-dd'T'HH:mm:ss.SSS" to epoc time in milliseconds.
-	 * @param utcString
+	 * @param utcString of type String of format 'yyyy-MM-dd'T'HH:mm:ss.SSS'
 	 * @return epoc time in milliseconds
 	 */
 	private static long utcString2epocMs(String utcString) {
@@ -232,9 +228,9 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 
 	/**
 	 * check if the current utcString timestamp is withing the phases then it returns true.
-	 * Otherwise it returns false.
-	 * @param utcString
-	 * @return
+	 * Otherwise, it returns false.
+	 * @param utcString of type String of format 'yyyy-MM-dd'T'HH:mm:ss.SSS'
+	 * @return of type boolean
 	 */
 	private boolean checkInPhases(String utcString, List<Phase> phases) {
 		long firstHalfStart = utcString2epocMs(phases.get(0).getStart());
@@ -247,9 +243,6 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 		if (actualTimestamp > firstHalfStart && actualTimestamp < firstHalfEnd) {
 			return true;
 		}
-		if (actualTimestamp > secondHalfStart && actualTimestamp < secondHalfEnd) {
-			return true;
-		}
-		return false;
+		return actualTimestamp > secondHalfStart && actualTimestamp < secondHalfEnd;
 	}
 }
