@@ -158,8 +158,6 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 													.setY(Integer.parseInt(objElem.getAttribute("y")))
 													.setZ(0)
 													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
-													.setVelocity(-1.0)
-													.setAccelleration(-1.0)
 													.build()
 									);
 								} else {
@@ -172,8 +170,6 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 													.setY(Integer.parseInt(objElem.getAttribute("y")))
 													.setZ(Integer.parseInt(objElem.getAttribute("z")))
 													.setSampling(Integer.parseInt(objElem.getAttribute("sampling")))
-													.setVelocity(-1.0)
-													.setAccelleration(-1.0)
 													.build()
 									);
 								}
