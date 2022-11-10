@@ -149,7 +149,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							Element objElem = (Element) objNode;
 							String objId = objElem.getAttribute("id");
 
-							if (!objId.equals("0")){
+							if (!objId.equals("0")) {
 								objects.add(
 										Object.newBuilder()
 												.setId(objElem.getAttribute("id"))
@@ -175,24 +175,18 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							}
 						}
 					}
-					// only create events if the timestamp is within the phases
-					if (checkInPhases(utcString, phases)) {
-						// only collect frames when ball is in play
-						if (isBallInPlayString.equals("0") || isBallInPlayString.equals("1")) {
-							kafkaTracabProducer.produce(matchId,
-									Frame.newBuilder()
-											.setUtc(utcString)
-											.setBallPossession(ballPossession)
-											.setIsBallInPlay(Integer.parseInt(isBallInPlayString))
-											.setObjects(objects)
-											.setMatch(match)
-											.setStadium(stadium)
-											.setPhases(phases)
-											.setCompetition(competition)
-											.build()
-							);
-						}
-					}
+					kafkaTracabProducer.produce(matchId,
+							Frame.newBuilder()
+									.setUtc(utcString)
+									.setBallPossession(ballPossession)
+									.setIsBallInPlay(Integer.parseInt(isBallInPlayString))
+									.setObjects(objects)
+									.setMatch(match)
+									.setStadium(stadium)
+									.setPhases(phases)
+									.setCompetition(competition)
+									.build()
+					);
 				}
 			}
 		}
@@ -214,37 +208,5 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 		}
 		utcString = (utcString + "000").substring(0, 23);
 		return utcString;
-	}
-
-	/**
-	 * Convertes the utc string of type "yyyy-MM-dd'T'HH:mm:ss.SSS" to epoc time in milliseconds.
-	 * @param utcString of type String of format 'yyyy-MM-dd'T'HH:mm:ss.SSS'
-	 * @return epoc time in milliseconds
-	 */
-	private static long utcString2epocMs(String utcString) {
-		DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-				.withZone(ZoneOffset.UTC);
-
-		return Instant.from(fmt.parse(utcString)).toEpochMilli();
-	}
-
-	/**
-	 * check if the current utcString timestamp is withing the phases then it returns true.
-	 * Otherwise, it returns false.
-	 * @param utcString of type String of format 'yyyy-MM-dd'T'HH:mm:ss.SSS'
-	 * @return of type boolean
-	 */
-	private boolean checkInPhases(String utcString, List<Phase> phases) {
-		long firstHalfStart = utcString2epocMs(phases.get(0).getStart());
-		long firstHalfEnd = utcString2epocMs(phases.get(0).getEnd());
-		long secondHalfStart = utcString2epocMs(phases.get(1).getStart());
-		long secondHalfEnd = utcString2epocMs(phases.get(1).getEnd());
-
-		long actualTimestamp = utcString2epocMs(utcString);
-
-		if (actualTimestamp > firstHalfStart && actualTimestamp < firstHalfEnd) {
-			return true;
-		}
-		return actualTimestamp > secondHalfStart && actualTimestamp < secondHalfEnd;
 	}
 }
