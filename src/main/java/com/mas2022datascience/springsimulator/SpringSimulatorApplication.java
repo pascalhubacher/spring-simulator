@@ -8,9 +8,6 @@ import com.mas2022datascience.avro.v1.Phase;
 import com.mas2022datascience.avro.v1.Stadium;
 import com.mas2022datascience.springsimulator.producer.KafkaTracabProducer;
 import java.io.File;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
@@ -175,8 +172,7 @@ public class SpringSimulatorApplication implements CommandLineRunner {
 							}
 						}
 					}
-					kafkaTracabProducer.produce(matchId,
-							Frame.newBuilder()
+					kafkaTracabProducer.produce(matchId, Frame.newBuilder()
 									.setUtc(utcString)
 									.setBallPossession(ballPossession)
 									.setIsBallInPlay(Integer.parseInt(isBallInPlayString))
