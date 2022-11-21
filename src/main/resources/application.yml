@@ -1,6 +1,6 @@
 topic:
   tracab:
-    name: tracab-01-raw
+    name: tracab_01_raw
     replication-factor: 2
     partitions: 3
 
